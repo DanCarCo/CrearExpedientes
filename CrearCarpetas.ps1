@@ -1,61 +1,73 @@
-#CREAR las carpetas
+# Rutas y archivos
+$rutaBase = "Indica la ruta del archivo que quieres copiar masivamente"
+$archivos = @(
+    "archivo 1",
+    "archivo 2",
+    "archivo 3"
+) #Indica el nombre de los archivos que quieres copiar
 
+# Rangos de carpetas
+$rangos = @(
+    @{Inicio = "Indica el nombre con el primer consecutivo"; Fin = "Indica el nombre con el primer consecutivo"},
+)
 
-$ruta = "Indica la ruta donde quieres crear las carpetas"
-$nombreInicio = "Indica el nombre con el primer consecutivo"
-$nombreFin = "Indica el nombre con el último consecutivo consecutivo"
-
-
-for ($i = $nombreInicio; $i -le $nombreFin; $i++) {
-    $rutaCarpeta = Join-Path -Path $ruta -ChildPath ($i)
-    if (!(Test-Path -Path $rutaCarpeta)) {
-        New-Item -ItemType Directory -Path $rutaCarpeta
-        Write-Host "Carpeta '$rutaCarpeta' creada."
-    } else {
-        Write-Host "La carpeta '$rutaCarpeta' ya existe."
+# Crear carpetas, subcarpetas, y sus subcarpetas
+foreach ($rango in $rangos) {
+    for ($i = $rango.Inicio; $i -le $rango.Fin; $i++) {
+        $rutaCarpeta = Join-Path -Path $rutaBase -ChildPath ($i)
+        if (!(Test-Path -Path $rutaCarpeta)) {
+            # Crear la carpeta principal
+            New-Item -ItemType Directory -Path $rutaCarpeta
+            Write-Host "Carpeta '$rutaCarpeta' creada."
+            
+            # Crear una subcarpeta ("Indica el nombre de la subcarpeta que quieres crear dentro de cada expediente")
+            $rutaSubCarpeta = Join-Path -Path $rutaCarpeta -ChildPath "subcarpeta 1"
+            New-Item -ItemType Directory -Path $rutaSubCarpeta
+            Write-Host "Subcarpeta '"subcarpeta 1"' creada en '$rutaCarpeta'."
+            
+            # Crear subcarpetas "C01" y "C02" dentro de "subcarpeta 1"
+            $rutaC01 = Join-Path -Path $rutaSubCarpeta -ChildPath "C01"
+            $rutaC02 = Join-Path -Path $rutaSubCarpeta -ChildPath "C02"
+            
+            New-Item -ItemType Directory -Path $rutaC01
+            New-Item -ItemType Directory -Path $rutaC02
+            
+            Write-Host "Subcarpetas 'C01' y 'C02' creadas en '$rutaSubCarpeta'."
+        } else {
+            Write-Host "La carpeta '$rutaCarpeta' ya existe."
+        }
     }
 }
 
-
-
-#COPIAR archivos
-
-
-$rutaArchivo = "Indica la ruta del archivo que quieres copiar masivamente"
-
-$rutaInicio = "Indica la ruta donde están las carpetas a las que les quieres copiar el archivo"
-$nombreInicio = "Indica el nombre con el primer consecutivo"
-$nombreFin = "Indica el nombre con el último consecutivo consecutivo"
-
+# Copiar archivos a las carpetas "C01"
+$nombreInicio = "Indica el nombre con el primer consecutivo" 
+$nombreFin = "Indica el nombre con el primer consecutivo"
 
 for ($i = $nombreInicio; $i -le $nombreFin; $i++) {
-    $rutaCarpeta = Join-Path -Path $rutaInicio -ChildPath ($i)
-    if (Test-Path -Path $rutaCarpeta) {
-        Copy-Item -Path $rutaArchivo -Destination $rutaCarpeta
-        Write-Host "Archivo copiado a '$rutaCarpeta'."
+    $rutaCarpeta = Join-Path -Path $rutaBase -ChildPath ($i)
+    $rutaC01 = Join-Path -Path $rutaCarpeta -ChildPath "subcarpeta 1\C01"
+    if (Test-Path -Path $rutaC01) {
+        foreach ($archivo in $archivos) {
+            $rutaArchivo = Join-Path -Path $rutaBase -ChildPath $archivo
+            Copy-Item -Path $rutaArchivo -Destination $rutaC01
+            Write-Host "Archivo '$archivo' copiado a '$rutaC01'."
+        }
     } else {
-        Write-Host "La carpeta '$rutaCarpeta' no existe."
+        Write-Host "La carpeta '$rutaC01' no existe."
     }
 }
 
+# Renombrar carpetas con un "0" antes y después del nombre
+Set-Location -Path $rutaBase
 
-
-#Agregar Texto no consecutivo (en mi caso los expedientes siempre comienzan en 0 terminan en 00)
-
-Set-Location -Path  "Indica la ruta donde están las carpetas que quieres agregar digitos en su nombre"
-
-# Define el rango de nombres consecutivos de carpetas
-$nombreInicio = "Indica el nombre con el primer consecutivo"
-$nombreFin = "Indica el nombre con el último consecutivo consecutivo"
-$digitosParaAgregar = "Indica el dígito a agregar"
-
-# Obtiene todas las carpetas en el directorio actual
-$carpetas = Get-ChildItem -Directory
+$digitosParaAgregar = "0"
 
 # Filtra y renombra las carpetas dentro del rango especificado
+$carpetas = Get-ChildItem -Directory
 foreach ($carpeta in $carpetas) {
     if ($carpeta.Name -ge $nombreInicio -and $carpeta.Name -le $nombreFin) {
         $nuevoNombre = $digitosParaAgregar + $carpeta.Name + $digitosParaAgregar + $digitosParaAgregar
         Rename-Item $carpeta.FullName -NewName $nuevoNombre
+        Write-Host "Carpeta '$carpeta.Name' renombrada a '$nuevoNombre'."
     }
 }
