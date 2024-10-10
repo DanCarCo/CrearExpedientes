@@ -1,73 +1,84 @@
-# Rutas y archivos
-$rutaBase = "Indica la ruta del archivo que quieres copiar masivamente"
-$archivos = @(
-    "archivo 1",
-    "archivo 2",
-    "archivo 3"
-) #Indica el nombre de los archivos que quieres copiar
+# Paths and files
+$basePath = "Specify the path of the file you want to copy en masse"
+$files = @(
+    "file 1",
+    "file 2",
+    "file 3"
+) # Specify the names of the files you want to copy
 
-# Rangos de carpetas
-$rangos = @(
-    @{Inicio = "Indica el nombre con el primer consecutivo"; Fin = "Indica el nombre con el primer consecutivo"},
+# Folder ranges
+$ranges = @(
+    @{Start = "Specify the name with the first consecutive number"; End = "Specify the name with the last consecutive number"}
 )
 
-# Crear carpetas, subcarpetas, y sus subcarpetas
-foreach ($rango in $rangos) {
-    for ($i = $rango.Inicio; $i -le $rango.Fin; $i++) {
-        $rutaCarpeta = Join-Path -Path $rutaBase -ChildPath ($i)
-        if (!(Test-Path -Path $rutaCarpeta)) {
-            # Crear la carpeta principal
-            New-Item -ItemType Directory -Path $rutaCarpeta
-            Write-Host "Carpeta '$rutaCarpeta' creada."
+# Create folders, subfolders, and their subfolders
+foreach ($range in $ranges) {
+    for ($i = $range.Start; $i -le $range.End; $i++) {
+        $folderPath = Join-Path -Path $basePath -ChildPath ($i)
+        if (!(Test-Path -Path $folderPath)) {
+            # Create the main folder
+            New-Item -ItemType Directory -Path $folderPath
+            Write-Host "Folder '$folderPath' created."
             
-            # Crear una subcarpeta ("Indica el nombre de la subcarpeta que quieres crear dentro de cada expediente")
-            $rutaSubCarpeta = Join-Path -Path $rutaCarpeta -ChildPath "subcarpeta 1"
-            New-Item -ItemType Directory -Path $rutaSubCarpeta
-            Write-Host "Subcarpeta '"subcarpeta 1"' creada en '$rutaCarpeta'."
+            # Create a subfolder ("Specify the name of the subfolder you want to create inside each folder")
+            $subfolderPath = Join-Path -Path $folderPath -ChildPath "subfolder1"
+            New-Item -ItemType Directory -Path $subfolderPath
+            Write-Host "Subfolder 'subfolder1' created in '$folderPath'."
             
-            # Crear subcarpetas "C01" y "C02" dentro de "subcarpeta 1"
-            $rutaC01 = Join-Path -Path $rutaSubCarpeta -ChildPath "C01"
-            $rutaC02 = Join-Path -Path $rutaSubCarpeta -ChildPath "C02"
+            # Create subfolders "C01" and "C02" inside "subfolder1"
+            $pathC01 = Join-Path -Path $subfolderPath -ChildPath "C01"
+            $pathC02 = Join-Path -Path $subfolderPath -ChildPath "C02"
             
-            New-Item -ItemType Directory -Path $rutaC01
-            New-Item -ItemType Directory -Path $rutaC02
+            New-Item -ItemType Directory -Path $pathC01
+            New-Item -ItemType Directory -Path $pathC02
             
-            Write-Host "Subcarpetas 'C01' y 'C02' creadas en '$rutaSubCarpeta'."
+            Write-Host "Subfolders 'C01' and 'C02' created in '$subfolderPath'."
         } else {
-            Write-Host "La carpeta '$rutaCarpeta' ya existe."
+            Write-Host "The folder '$folderPath' already exists."
         }
     }
 }
 
-# Copiar archivos a las carpetas "C01"
-$nombreInicio = "Indica el nombre con el primer consecutivo" 
-$nombreFin = "Indica el nombre con el primer consecutivo"
+# Copy files to the "C01" and "C02" folders
+$startName = "Specify the name with the first consecutive number" 
+$endName = "Specify the name with the last consecutive number"
 
-for ($i = $nombreInicio; $i -le $nombreFin; $i++) {
-    $rutaCarpeta = Join-Path -Path $rutaBase -ChildPath ($i)
-    $rutaC01 = Join-Path -Path $rutaCarpeta -ChildPath "subcarpeta 1\C01"
-    if (Test-Path -Path $rutaC01) {
-        foreach ($archivo in $archivos) {
-            $rutaArchivo = Join-Path -Path $rutaBase -ChildPath $archivo
-            Copy-Item -Path $rutaArchivo -Destination $rutaC01
-            Write-Host "Archivo '$archivo' copiado a '$rutaC01'."
+for ($i = $startName; $i -le $endName; $i++) {
+    $folderPath = Join-Path -Path $basePath -ChildPath ($i)
+    $pathC01 = Join-Path -Path $folderPath -ChildPath "subfolder1\C01"
+    $pathC02 = Join-Path -Path $folderPath -ChildPath "subfolder1\C02"
+    
+    if (Test-Path -Path $pathC01 -and Test-Path -Path $pathC02) {
+        foreach ($file in $files) {
+            $filePath = Join-Path -Path $basePath -ChildPath $file
+            
+            # Copy to C01
+            Copy-Item -Path $filePath -Destination $pathC01 -Force
+            Write-Host "File '$file' copied to '$pathC01'."
+
+            # If the file is "file3", also copy to C02
+            if ($file -eq "file3") {
+                Copy-Item -Path $filePath -Destination $pathC02 -Force
+                Write-Host "File '$file' copied to '$pathC02'."
+            }
         }
     } else {
-        Write-Host "La carpeta '$rutaC01' no existe."
+        Write-Host "The folders '$pathC01' or '$pathC02' do not exist."
     }
 }
 
-# Renombrar carpetas con un "0" antes y después del nombre
-Set-Location -Path $rutaBase
+# Rename folders with a "0" before and after the name
+Set-Location -Path $basePath
 
-$digitosParaAgregar = "0"
+$digitsToAdd = "0"
 
-# Filtra y renombra las carpetas dentro del rango especificado
-$carpetas = Get-ChildItem -Directory
-foreach ($carpeta in $carpetas) {
-    if ($carpeta.Name -ge $nombreInicio -and $carpeta.Name -le $nombreFin) {
-        $nuevoNombre = $digitosParaAgregar + $carpeta.Name + $digitosParaAgregar + $digitosParaAgregar
-        Rename-Item $carpeta.FullName -NewName $nuevoNombre
-        Write-Host "Carpeta '$carpeta.Name' renombrada a '$nuevoNombre'."
+# Filter and rename the folders within the specified range
+$folders = Get-ChildItem -Directory
+foreach ($folder in $folders) {
+    if ($folder.Name -ge $startName -and $folder.Name -le $endName) {
+        $newName = $digitsToAdd + $folder.Name + $digitsToAdd + $digitsToAdd
+        Rename-Item $folder.FullName -NewName $newName
+        Write-Host "Folder '$folder.Name' renamed to '$newName'."
     }
 }
+
